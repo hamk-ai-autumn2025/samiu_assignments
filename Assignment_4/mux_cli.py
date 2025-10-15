@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Load .env from project tree root (searches upward)
+# Load .env from project root (search upwards)
 try:
     from dotenv import load_dotenv, find_dotenv
     load_dotenv(find_dotenv(usecwd=True), override=False)
