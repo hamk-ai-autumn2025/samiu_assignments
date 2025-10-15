@@ -148,7 +148,7 @@ def main():
                     help="Hard cap for model output tokens (overrides --length preset)")
     ap.add_argument("--per-source-chars", type=int, default=4000,
                     help="Max characters per source before sending to LLM")
-    ap.add_argument("--total-chars", type:int, default=12000,
+    ap.add_argument("--total-chars", type=int, default=12000,
                     help="Global max characters across all sources")
 
     args = ap.parse_args()
