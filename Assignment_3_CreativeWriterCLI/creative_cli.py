@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
 
+# Load .env from project tree root (searches upward)
+try:
+    from dotenv import load_dotenv, find_dotenv
+    load_dotenv(find_dotenv(usecwd=True), override=False)
+except Exception:
+    pass
+
 import os
 import sys
 import argparse
