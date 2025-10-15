@@ -7,6 +7,9 @@
 Komentorivisovellus, joka käyttää OpenAI API:a tuottaakseen SEO-optimoitua luovaa tekstiä.  
 Tuottaa oletuksena **3 versiota** samasta promptista. 
 
+## Model
+gpt-4.1
+
 ## Käyttö
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
