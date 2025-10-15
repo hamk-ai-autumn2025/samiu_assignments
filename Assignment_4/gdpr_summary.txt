@@ -1,0 +1,8 @@
+**Summary of Sources on GDPR:**
+
+- The General Data Protection Regulation (GDPR) is an EU law effective from 2018, replacing Directive 95/46/EC, aimed at protecting personal data and privacy for individuals within the EU and EEA [FILE: gdpr.txt, gdpr.pdf].
+- GDPR is based on principles of transparency, accountability, and data minimization. Organizations must explain how data is used and obtain valid consent where required [FILE: gdpr.txt, gdpr.docx].
+- It grants individuals rights over their data, including access, rectification, erasure, and portability [FILE: gdpr.docx].
+- The regulation recognizes data protection as a fundamental right, balancing it with other rights and freedoms [FILE: gdpr.pdf].
+- Non-compliance can result in significant penalties [FILE: gdpr.txt].
+- GDPR aims to harmonize data protection laws across the EU, ensuring the free movement of personal data and supporting economic and social integration [FILE: gdpr.pdf].
