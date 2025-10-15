@@ -16,7 +16,7 @@ from docx import Document as DocxDocument
 from pypdf import PdfReader
 from openai import OpenAI
 
-MAX_CHARS_PER_SOURCE = 8000  # yksinkertainen raja ettei prompt paisu liikaa
+MAX_CHARS_PER_SOURCE = 2000  # yksinkertainen raja ettei prompt paisu liikaa
 
 def is_url(s: str) -> bool:
     return s.lower().startswith(("http://", "https://"))
