@@ -1,0 +1,3 @@
+The General Data Protection Regulation (GDPR) is an EU regulation from 2018.
+It protects personal data and privacy, emphasizing transparency, accountability,
+and data minimization. Non-compliance can lead to significant penalties.

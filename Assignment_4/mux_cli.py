@@ -40,15 +40,20 @@ def read_pdf_file(path: Path) -> str:
     return "\n".join(texts)
 
 def read_url(url: str) -> str:
-    r = requests.get(url, timeout=20)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15) "
+                      "AppleWebKit/537.36 (KHTML, like Gecko) "
+                      "Chrome/120.0 Safari/537.36"
+    }
+    r = requests.get(url, timeout=20, headers=headers)
     r.raise_for_status()
     soup = BeautifulSoup(r.text, "html.parser")
-    # Poista script/style/nav/footer
     for tag in soup(["script", "style", "noscript", "header", "footer", "nav"]):
         tag.decompose()
     text = soup.get_text(" ")
     text = re.sub(r"\s+", " ", text).strip()
     return text
+
 
 def load_source(src: str) -> Tuple[str, str]:
     """Palauttaa (label, text)."""
