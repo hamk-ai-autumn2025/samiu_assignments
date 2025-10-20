@@ -17,7 +17,7 @@ Lisäksi ohjelma osaa käyttää valmista WAV/MP3-tiedostoa ilman nauhoitusta
 ja mittaa eri vaiheiden viiveet.
 
 ## Käyttökokemus
-Testattu MacBook Pro (macOS Sonoma).
+Testattu MacBook Pro (macOS Tahoe).
 Puheen nauhoitus, transkriptio ja käännös toimivat luotettavasti.
 TTS toimii OpenAI-mallilla, ja jos malli ei ole käytettävissä,
 järjestelmän oma `say`-komento toimii varavarana.
