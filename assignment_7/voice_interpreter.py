@@ -114,33 +114,54 @@ def translate(client: OpenAI, text: str, src: str, tgt: str):
     return resp.choices[0].message.content.strip(), dur
 
 def tts_and_play(client: OpenAI, text: str, out_wav: Path):
+    import time, platform, shutil, subprocess
     t0 = time.perf_counter()
     try:
+        # HUOM: käytä response_format, ei "format"
         resp = client.audio.speech.create(
             model="gpt-4o-mini-tts",
             voice="alloy",
             input=text,
-            format="wav",
+            response_format="wav",
         )
-        out_wav.write_bytes(resp.read())
+        audio_bytes = resp.read()          # luetaan tavut
+        out_wav.write_bytes(audio_bytes)   # talletetaan WAV
         dur = time.perf_counter() - t0
         print(f"[tts] saved: {out_wav}")
-        played = play_audio(out_wav)
+
+        # Toista (macOS: afplay)
+        played = False
+        try:
+            if platform.system() == "Darwin" and shutil.which("afplay"):
+                subprocess.Popen(["afplay", str(out_wav)])
+                played = True
+            elif platform.system() == "Linux" and shutil.which("aplay"):
+                subprocess.Popen(["aplay", str(out_wav)])
+                played = True
+            elif platform.system() == "Windows":
+                ps = 'Add-Type –AssemblyName presentationCore; (New-Object System.Media.SoundPlayer "{}").PlaySync()'.format(str(out_wav))
+                subprocess.Popen(["powershell", "-c", ps]); played = True
+        except Exception:
+            played = False
+
         if not played:
-            print("  (Vihje: afplay/aplay/powershell puuttuu — avaa WAV käsin.)")
+            print("  (Vihje: avaa WAV manuaalisesti mediasoittimella.)")
         return dur
+
     except Exception as e:
         print(f"[tts] OpenAI TTS failed: {e}\n  → fallback to system TTS (macOS 'say' jos saatavilla).", file=sys.stderr)
         dur = time.perf_counter() - t0
-        if platform.system() == "Darwin" and shutil.which("say"):
-            try:
+        # macOS fallback
+        try:
+            if platform.system() == "Darwin" and shutil.which("say"):
                 subprocess.run(["say", text], check=True)
                 return dur
-            except Exception:
-                pass
+        except Exception:
+            pass
         print("  (Ei TTS-toistoa saatavilla. Teksti alla.)")
         print("  SPOKEN:", text)
         return dur
+
 
 # ---------- Main ----------
 
