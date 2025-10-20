@@ -59,11 +59,3 @@ python img2txt2img.py --image "./Sample image/Randy savage.png" --pollinations -
 Generoitu kuva vastasi rakenteellisesti ja sisällöllisesti alkuperäistä haastattelutilannetta, mutta paljon korjattavaa olisi
 OpenAI-kuvamalli ei ollut käytettävissä, käytettiin Pollinationsia.  
 
-
----
-
-## Yhteenveto
-
-Ohjelma toteuttaa onnistuneesti **Image → Text → Image** -ketjun.  
-Toteutus on yksinkertainen, toimii ilman lisäkirjastoja ja tuottaa johdonmukaiset tulokset.  
-Generoitu kuva vastaa visuaaliselta tyyliltään ja sommittelultaan alkuperäisen kuvamateriaalin tunnelmaa.
