@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Snake — Assignment 20</title>
+<style>
+  :root{
+    --bg:#111; --panel:#181a1b; --text:#f3f3f3; --accent:#37d67a; --accent2:#f7b801;
+    --danger:#ff4d4d;
+  }
+  html,body{height:100%}
+  body{
+    margin:0; background:linear-gradient(180deg,#0f1011,#131516);
+    color:var(--text); font-family: system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+    display:flex; align-items:center; justify-content:center; padding:12px;
+  }
+  .wrap{
+    width:min(92vw,520px);
+  }
+  h1{font-size:clamp(1.1rem,3.2vw,1.4rem); margin:.5rem 0 0; font-weight:700;}
+  .panel{
+    background:var(--panel); border-radius:16px; box-shadow:0 10px 28px rgba(0,0,0,.35);
+    padding:14px;
+  }
+  #hud{
+    display:flex; gap:10px; align-items:center; justify-content:space-between; margin-bottom:10px;
+  }
+  .badge{
+    background:#0d0f10; border:1px solid #2a2d30; padding:6px 10px; border-radius:10px;
+  }
+  #msg{min-height:1.2em; opacity:.9}
+  canvas{
+    width:100%; height:auto; display:block; border-radius:12px; background:#0b0d0f;
+    border:1px solid #2a2d30;
+    touch-action:none; /* estä selaimen pyyhkäisyt */
+  }
+  .btn{
+    border:1px solid #2a2d30; background:#101214; color:var(--text); padding:.5rem .8rem;
+    border-radius:10px; cursor:pointer;
+  }
+  .btn.primary{border-color:#2b5842; background:#0e1c16; color:#d6ffe9}
+  .btn:active{transform:translateY(1px)}
+  /* Kosketusohjain mobiilille */
+  .touch{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:12px;
+    user-select:none;
+  }
+  .arrow{aspect-ratio:1/1; display:flex; align-items:center; justify-content:center;
+    border:1px solid #2a2d30; border-radius:12px; background:#101214; font-size:22px}
+  .arrow:active{background:#0c0e10}
+  .arrow.up{grid-column:2}
+  .arrow.left{grid-column:1; grid-row:2}
+  .arrow.right{grid-column:3; grid-row:2}
+  .arrow.down{grid-column:2; grid-row:3}
+  @media(min-width:640px){ .touch{display:none;} }
+  .legend{font-size:.85rem; opacity:.8; margin-top:6px}
+</style>
+</head>
+<body>
+  <div class="wrap panel">
+    <div id="hud">
+      <div class="badge">Pisteet: <b id="score">0</b></div>
+      <div class="badge">Nopeus: <b id="speed">1x</b></div>
+      <div style="display:flex; gap:8px;">
+        <button id="btnPause" class="btn">⏸ Pause</button>
+        <button id="btnRestart" class="btn primary">↻ Restart</button>
+      </div>
+    </div>
+    <div id="msg" aria-live="polite">Nuoli/WASD ohjaa · P välitauko</div>
+    <canvas id="game" width="400" height="400" aria-label="Snake peli"></canvas>
+
+    <div class="touch" aria-hidden="true">
+      <div class="arrow up"    data-dir="up">▲</div>
+      <div class="arrow left"  data-dir="left">◀</div>
+      <div class="arrow right" data-dir="right">▶</div>
+      <div class="arrow down"  data-dir="down">▼</div>
+    </div>
+    <div class="legend">Tavoite: syö hedelmä (keltainen). Älä törmää seiniin tai itseesi.</div>
+  </div>
+
+<script>
+/* === Snake — yksitiedostoinen toteutus === */
+const cvs   = document.getElementById('game');
+const ctx   = cvs.getContext('2d');
+const scoreEl = document.getElementById('score');
+const speedEl = document.getElementById('speed');
+const msg     = document.getElementById('msg');
+const btnPause = document.getElementById('btnPause');
+const btnRestart = document.getElementById('btnRestart');
+
+const GRID = 20;            // ruudun koko px (400/20 = 20x20 ruudukko)
+const TICK_START = 120;     // ms / askel (pienempi = nopeampi)
+const SPEEDUP_EVERY = 5;    // joka 5. hedelmä nopeutetaan
+let tickMs, timer;
+
+let snake, dir, nextDir, food, score, running, eaten;
+
+function reset(){
+  snake = [{x:10,y:10}];      // alku keskellä
+  dir = {x:1,y:0}; 
+  nextDir = {x:1,y:0};
+  score = 0;
+  tickMs = TICK_START;
+  eaten = 0;
+  spawnFood();
+  updateHUD();
+  running = true;
+  msg.textContent = "Onnea matkaan!";
+  if (timer) clearInterval(timer);
+  timer = setInterval(loop, tickMs);
+}
+function spawnFood(){
+  // arvo ruudukosta paikka joka ei ole madon päällä
+  do{
+    food = {x: Math.floor(Math.random()* (cvs.width/GRID)),
+            y: Math.floor(Math.random()* (cvs.height/GRID))};
+  }while(snake.some(s => s.x===food.x && s.y===food.y));
+}
+function updateHUD(){
+  scoreEl.textContent = score;
+  const mult = (TICK_START / tickMs).toFixed(1);
+  speedEl.textContent = `${mult}x`;
+}
+
+function loop(){
+  // päivitä suunta (estää 180-käännöksen samalle framelle)
+  if ((nextDir.x !== -dir.x) || (nextDir.y !== -dir.y)) dir = nextDir;
+
+  // uusi pää
+  const head = {x: (snake[0].x + dir.x), y: (snake[0].y + dir.y)};
+  // törmäsikö seiniin?
+  if (head.x < 0 || head.y < 0 || head.x >= cvs.width/GRID || head.y >= cvs.height/GRID) return gameOver();
+  // törmäsikö itseensä?
+  if (snake.some((s,i) => i && s.x===head.x && s.y===head.y)) return gameOver();
+
+  snake.unshift(head);
+
+  // söikö ruokaa?
+  if (head.x === food.x && head.y === food.y){
+    score++;
+    eaten++;
+    spawnFood();
+    if (eaten % SPEEDUP_EVERY === 0 && tickMs > 60){
+      tickMs -= 10;
+      clearInterval(timer);
+      timer = setInterval(loop, tickMs);
+      msg.textContent = "Nopeutettiin vauhtia!";
+    } else {
+      msg.textContent = "Nams!";
+    }
+    updateHUD();
+  } else {
+    snake.pop(); // liike ilman kasvua
+  }
+
+  draw();
+}
+
+function draw(){
+  // tausta
+  ctx.fillStyle = '#0b0d0f';
+  ctx.fillRect(0,0,cvs.width, cvs.height);
+
+  // ruudukko (kevyt)
+  ctx.strokeStyle = 'rgba(255,255,255,.04)';
+  ctx.lineWidth = 1;
+  for(let i=GRID;i<cvs.width;i+=GRID){ ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,cvs.height); ctx.stroke(); }
+  for(let j=GRID;j<cvs.height;j+=GRID){ ctx.beginPath(); ctx.moveTo(0,j); ctx.lineTo(cvs.width,j); ctx.stroke(); }
+
+  // ruoka
+  ctx.fillStyle = '#f7b801';
+  roundRect(ctx, food.x*GRID+3, food.y*GRID+3, GRID-6, GRID-6, 5, true);
+
+  // mato
+  snake.forEach((seg,idx)=>{
+    const x = seg.x*GRID, y = seg.y*GRID;
+    const g = Math.max(0, 180 - idx*6);
+    ctx.fillStyle = `hsl(150 ${60+Math.max(0,30-idx*2)}% ${35 + (idx?0:10)}%)`;
+    roundRect(ctx, x+2, y+2, GRID-4, GRID-4, 6, true);
+    // pieni highlight päässä
+    if (idx===0){
+      ctx.fillStyle = '#b6ffe0';
+      ctx.fillRect(x+6, y+6, 4, 4);
+    }
+  });
+}
+
+// apufunktio pyöristetyille recteille
+function roundRect(ctx, x, y, w, h, r, fill=true){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+  if (fill) ctx.fill();
+}
+
+function gameOver(){
+  running = false;
+  clearInterval(timer);
+  msg.textContent = "Game Over — paina ↻ Restart tai R aloittaaksesi uudelleen.";
+  // piirrämme punaisen peiton
+  ctx.fillStyle = 'rgba(255,77,77,.08)';
+  ctx.fillRect(0,0,cvs.width,cvs.height);
+}
+
+function setDir(d){
+  if (!running) return;
+  const map = {
+    'left':  {x:-1,y:0}, 'ArrowLeft': {x:-1,y:0}, 'a':{x:-1,y:0}, 'A':{x:-1,y:0},
+    'right': {x:1,y:0},  'ArrowRight':{x:1,y:0},  'd':{x:1,y:0},  'D':{x:1,y:0},
+    'up':    {x:0,y:-1}, 'ArrowUp':   {x:0,y:-1}, 'w':{x:0,y:-1}, 'W':{x:0,y:-1},
+    'down':  {x:0,y:1},  'ArrowDown': {x:0,y:1},  's':{x:0,y:1},  'S':{x:0,y:1}
+  };
+  const nd = map[d];
+  if (!nd) return;
+  // estä 180 asteen käännös
+  if (nd.x === -dir.x && nd.y === -dir.y) return;
+  nextDir = nd;
+}
+document.addEventListener('keydown', (e)=>{
+  if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','a','A','d','D','w','W','s','S'].includes(e.key)){
+    setDir(e.key); e.preventDefault();
+  } else if (e.key==='p' || e.key==='P'){
+    togglePause();
+  } else if (e.key==='r' || e.key==='R'){
+    reset();
+  }
+});
+
+for (const el of document.querySelectorAll('.arrow')){
+  el.addEventListener('click', ()=> setDir(el.dataset.dir));
+}
+
+function togglePause(){
+  if (!running){ return; }
+  if (timer){
+    clearInterval(timer); timer = null;
+    msg.textContent = "Tauko — P jatkaa.";
+    btnPause.textContent = '▶ Continue';
+  } else {
+    timer = setInterval(loop, tickMs);
+    msg.textContent = "Jatkuu...";
+    btnPause.textContent = '⏸ Pause';
+  }
+}
+btnPause.addEventListener('click', togglePause);
+btnRestart.addEventListener('click', reset);
+
+// skaalataan canvas teräväksi dpr:ää varten
+function setupCanvasScale(){
+  const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  const w = 400, h = 400;
+  cvs.width = w * dpr; cvs.height = h * dpr;
+  cvs.style.width = w + 'px'; cvs.style.height = h + 'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+
+setupCanvasScale();
+reset();
+draw();
+</script>
+</body>
+</html>
