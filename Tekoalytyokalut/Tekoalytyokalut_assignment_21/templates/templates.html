@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Products{% endblock %}
+{% block content %}
+<h2>Products</h2>
+{% if items %}
+  <table class="table table-striped bg-white shadow-sm">
+    <thead><tr><th>Nimi</th><th>Kategoria</th><th>Hinta €</th><th>Varastossa</th></tr></thead>
+    <tbody>
+      {% for p in items %}
+      <tr>
+        <td>{{ p.name }}</td>
+        <td>{{ p.get_category_display }}</td>
+        <td>{{ p.price_eur }}</td>
+        <td>{{ p.in_stock|yesno:"Kyllä,Ei" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p>Ei tuotteita vielä.</p>
+{% endif %}
+{% endblock %}

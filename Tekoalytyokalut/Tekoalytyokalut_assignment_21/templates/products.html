@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Products · Möttösen tila{% endblock %}
+{% block content %}
+  <h2>Products</h2>
+  {% if items %}
+    <table class="table table-striped bg-white shadow-sm">
+      <thead>
+        <tr><th>Name</th><th>Category</th><th>Price €</th><th>In stock</th></tr>
+      </thead>
+      <tbody>
+        {% for p in items %}
+          <tr>
+            <td>{{ p.name }}</td>
+            <td>{{ p.get_category_display }}</td>
+            <td>{{ p.price_eur }}</td>
+            <td>{{ p.in_stock|yesno:"Yes,No" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No products yet.</p>
+  {% endif %}
+{% endblock %}

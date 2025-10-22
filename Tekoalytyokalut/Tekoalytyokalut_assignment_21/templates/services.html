@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Services · Möttösen tila{% endblock %}
+{% block content %}
+  <h2>Services</h2>
+  {% if items %}
+    <ul class="list-group shadow-sm">
+      {% for s in items %}
+        <li class="list-group-item">
+          <strong>{{ s.title }}</strong>
+          {% if not s.active %}<span class="badge bg-secondary ms-2">Inactive</span>{% endif %}
+          <div class="text-muted">{{ s.description }}</div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No services yet.</p>
+  {% endif %}
+{% endblock %}
